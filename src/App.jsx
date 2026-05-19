@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-const WEBHOOK_URL = 'https://TU-WEBHOOK-AQUI.com/velar-ia';
-const WHATSAPP_URL = 'https://wa.me/549XXXXXXXXXX?text=Hola%20Velar%20IA,%20quiero%20automatizar%20mi%20negocio';
+const WEBHOOK_URL = 'https://formsubmit.co/ajax/vale07161@gmail.com';
+const WHATSAPP_URL = 'https://wa.me/543813445475?text=Hola%20Velar%20IA,%20quiero%20automatizar%20mi%20negocio';
 
 const benefits = [
   [MessageCircle, 'WhatsApp que responde solo', 'Atencion inmediata, preguntas frecuentes, calificacion y derivacion al equipo correcto sin perder oportunidades.'],
