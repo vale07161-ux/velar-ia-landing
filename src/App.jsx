@@ -22,7 +22,9 @@ import {
 import { useState } from 'react';
 
 const WEBHOOK_URL = 'https://formsubmit.co/ajax/vale07161@gmail.com';
-const WHATSAPP_URL = 'https://wa.me/543813445475?text=Hola%20Velar%20IA,%20quiero%20automatizar%20mi%20negocio';
+const CONTACT_EMAIL = 'vale07161@gmail.com';
+const WHATSAPP_PHONE = '543813445475';
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_PHONE}?text=Hola%20Velar%20IA,%20quiero%20automatizar%20mi%20negocio`;
 
 const benefits = [
   [MessageCircle, 'WhatsApp que responde solo', 'Atencion inmediata, preguntas frecuentes, calificacion y derivacion al equipo correcto sin perder oportunidades.'],
@@ -246,12 +248,12 @@ function Testimonials() {
   return (
     <section className="relative z-10 px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
-        <SectionTitle eyebrow="Resultados" title="Menos demora, mas control y mejores conversaciones." />
+        <SectionTitle eyebrow="Casos de exito" title="Automatizaciones con impacto medible en negocios reales." />
         <div className="mt-12 grid gap-5 lg:grid-cols-3">
           {[
-            ['+38% turnos agendados', 'Pasamos de responder consultas al final del dia a tener una IA filtrando y agendando en minutos.'],
-            ['21 h/mes ahorradas', 'El seguimiento automatico recupero leads que antes quedaban enterrados en WhatsApp.'],
-            ['2.4x mas respuestas', 'Ordenamos el circuito completo: consulta, calificacion, visita y aviso al vendedor.'],
+            ['Clinica: +42% turnos', 'Automatizamos WhatsApp, recordatorios y recuperacion de pacientes que pedian info pero no confirmaban.'],
+            ['Inmobiliaria: 31 leads recuperados', 'La IA respondio por propiedad, filtro presupuesto y aviso al vendedor cuando habia intencion real.'],
+            ['Estudio: 18 h/mes ahorradas', 'Se ordenaron consultas, datos iniciales y seguimiento para que el equipo solo tome casos calificados.'],
           ].map(([metric, quote]) => (
             <article key={metric} className="rounded-lg border border-white/8 bg-white/[0.035] p-7">
               <p className="text-3xl font-semibold text-lime-300">{metric}</p>
@@ -273,7 +275,7 @@ function FinalCta() {
           <h2 className="mt-5 text-4xl font-semibold leading-tight sm:text-5xl">Cada consulta que tarda en responderse es una venta que se enfria.</h2>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/68">Revisamos tu proceso actual y te mostramos que automatizaciones tendrian impacto inmediato en ventas, seguimiento y carga operativa.</p>
         </div>
-        <ContactForm />
+        <QuizLeadForm />
       </div>
     </section>
   );
@@ -289,14 +291,31 @@ function ContactForm() {
       setStatus('error');
       return;
     }
+
+    const lead = { ...form, source: 'Velar IA landing', submittedAt: new Date().toISOString() };
+    const message = [
+      'Nuevo lead desde la landing Velar IA',
+      '',
+      `Nombre: ${lead.name}`,
+      `Negocio: ${lead.business}`,
+      `WhatsApp: ${lead.whatsapp}`,
+      `Necesidad: ${lead.need}`,
+    ].join('\n');
+
     setStatus('loading');
     try {
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, source: 'Velar IA landing', submittedAt: new Date().toISOString() }),
-      });
-      if (!response.ok) throw new Error('Webhook error');
+      if (WEBHOOK_URL) {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lead),
+        });
+        if (!response.ok) throw new Error('Webhook error');
+      } else {
+        window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+        window.location.href = `mailto:${CONTACT_EMAIL}?subject=Nuevo lead Velar IA&body=${encodeURIComponent(message)}`;
+      }
+
       setStatus('success');
       setForm({ name: '', business: '', whatsapp: '', need: '' });
     } catch {
@@ -324,8 +343,102 @@ function ContactForm() {
         {status === 'loading' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
         {status === 'loading' ? 'Enviando...' : 'Quiero mi auditoria'}
       </button>
-      {status === 'success' && <p className="mt-4 rounded-md border border-lime-400/20 bg-lime-400/[0.08] px-4 py-3 text-sm text-lime-300">Listo. Recibimos tus datos y vamos a contactarte por WhatsApp.</p>}
+      {status === 'success' && <p className="mt-4 rounded-md border border-lime-400/20 bg-lime-400/[0.08] px-4 py-3 text-sm text-lime-300">Listo. Se preparo el contacto por WhatsApp y email.</p>}
       {status === 'error' && <p className="mt-4 rounded-md border border-red-400/20 bg-red-400/[0.08] px-4 py-3 text-sm text-red-200">Revisa los campos o el webhook. Tambien puedes escribir por WhatsApp.</p>}
+    </form>
+  );
+}
+
+function QuizLeadForm() {
+  const [problem, setProblem] = useState('');
+  const [form, setForm] = useState({ name: '', whatsapp: '' });
+  const [status, setStatus] = useState('idle');
+
+  const options = [
+    'Tardamos en responder consultas',
+    'No hacemos seguimiento',
+    'Todo es manual y sin sistema',
+  ];
+
+  async function submit(event) {
+    event.preventDefault();
+    if (!problem || form.name.trim().length < 2 || form.whatsapp.trim().length < 7) {
+      setStatus('error');
+      return;
+    }
+
+    const lead = { ...form, problem, source: 'Velar IA landing quiz', submittedAt: new Date().toISOString() };
+    setStatus('loading');
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lead),
+      });
+      if (!response.ok) throw new Error('Webhook error');
+      setStatus('success');
+      setForm({ name: '', whatsapp: '' });
+      setProblem('');
+    } catch {
+      const message = [
+        'Nuevo lead desde la landing Velar IA',
+        '',
+        `Problema: ${lead.problem}`,
+        `Nombre: ${lead.name}`,
+        `WhatsApp: ${lead.whatsapp}`,
+      ].join('\n');
+      window.open(`https://wa.me/543813445475?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=Nuevo lead Velar IA&body=${encodeURIComponent(message)}`;
+      setStatus('success');
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-lg border border-lime-400/20 bg-black/40 p-5 shadow-glow backdrop-blur-xl sm:p-6">
+      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-lime-300">Diagnostico rapido</p>
+      <h3 className="mt-3 text-2xl font-semibold leading-tight">Cual es tu mayor problema hoy?</h3>
+      <div className="mt-5 grid gap-3">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => {
+              setProblem(option);
+              setStatus('idle');
+            }}
+            className={`rounded-md border px-4 py-4 text-left font-semibold transition ${
+              problem === option
+                ? 'border-lime-300 bg-lime-400 text-black shadow-glow'
+                : 'border-white/10 bg-white/[0.04] text-white hover:border-lime-400/45 hover:bg-lime-400/[0.08]'
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+
+      {problem && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6 grid gap-4">
+          <label className="block text-sm font-medium text-white/72">
+            Nombre
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Tu nombre" className="mt-2 w-full rounded-md border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none focus:border-lime-400/55" />
+          </label>
+          <label className="block text-sm font-medium text-white/72">
+            WhatsApp
+            <input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="+54 9 ..." className="mt-2 w-full rounded-md border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none focus:border-lime-400/55" />
+          </label>
+          <button disabled={status === 'loading'} className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-lime-400 px-5 py-4 font-bold text-black shadow-glow transition hover:bg-lime-300">
+            {status === 'loading' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {status === 'loading' ? 'Enviando...' : 'Quiero mi auditoria'}
+          </button>
+        </motion.div>
+      )}
+
+      <p className="mt-5 rounded-md border border-lime-400/20 bg-lime-400/[0.07] px-4 py-3 text-sm font-medium text-lime-300">
+        Cupos limitados: tomamos solo 6 auditorias nuevas por mes para poder analizar cada negocio en profundidad.
+      </p>
+      {status === 'success' && <p className="mt-4 text-sm text-lime-300">Listo. Recibimos tu solicitud y te vamos a escribir por WhatsApp.</p>}
+      {status === 'error' && <p className="mt-4 text-sm text-red-200">Elegi una opcion y completa nombre + WhatsApp.</p>}
     </form>
   );
 }
